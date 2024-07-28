@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/ktr0731/go-fuzzyfinder"
@@ -56,7 +57,7 @@ func runFuzzy(candidates []Candidate) error {
 			if i == -1 {
 				return ""
 			}
-			return candidates[i].Fragment
+			return fmt.Sprintf("%s", candidates[i].Fragment)
 		}),
 	)
 	if err != nil {
@@ -76,12 +77,16 @@ func zoektResponse2Candidate(res ZoektResponse) ([]Candidate, error) {
 		for _, m := range f.Matches {
 			var fragment string
 			for _, frag := range m.Fragments {
-				fragment += frag.Pre + yellow.Sprint(frag.Match) + frag.Post + "\n"
+				fragment += frag.Pre + yellow.Sprint(frag.Match) + frag.Post
 			}
 			candidates = append(candidates, Candidate{
-				Name:     f.Repo + " : " + f.FileName,
-				URL:      f.URL + "#L" + fmt.Sprint(m.LineNum),
-				Fragment: m.Before + fragment + m.After,
+				Name: f.Repo + " : " + f.FileName,
+				URL:  f.URL + "#L" + fmt.Sprint(m.LineNum),
+				// Fragment: m.Before + fragment + m.After,
+				// go-fuzzyfinder doesn't accept tabs so I'll replace them.
+				// This is a temporary solution and may even replace \t in your code.
+				// https://github.com/ktr0731/go-fuzzyfinder/issues/223
+				Fragment: strings.ReplaceAll(m.Before+fragment+m.After, "\t", "    "),
 			})
 		}
 	}
