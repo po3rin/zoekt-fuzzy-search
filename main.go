@@ -30,6 +30,8 @@ type FileMatche struct {
 type Match struct {
 	LineNum   int        `json:"LineNum"`
 	Fragments []Fragment `json:"Fragments"`
+	Before    string     `json:"Before"`
+	After     string     `json:"After"`
 }
 
 type Fragment struct {
@@ -65,19 +67,23 @@ func runFuzzy(candidates []Candidate) error {
 }
 
 func zoektResponse2Candidate(res ZoektResponse) ([]Candidate, error) {
+	color.NoColor = false
+	yellow := color.New(color.FgYellow)
+
 	candidates := make([]Candidate, 0)
+	color.NoColor = false
 	for _, f := range res.Result.FileMatches {
-		var fragment string
 		for _, m := range f.Matches {
+			var fragment string
 			for _, frag := range m.Fragments {
-				fragment += color.HiBlueString(fmt.Sprint(m.LineNum)) + " : " + frag.Pre + color.YellowString(frag.Match) + frag.Post + "\n"
+				fragment += frag.Pre + yellow.Sprint(frag.Match) + frag.Post + "\n"
 			}
+			candidates = append(candidates, Candidate{
+				Name:     f.Repo + " : " + f.FileName,
+				URL:      f.URL + "#L" + fmt.Sprint(m.LineNum),
+				Fragment: m.Before + fragment + m.After,
+			})
 		}
-		candidates = append(candidates, Candidate{
-			Name:     f.Repo + " : " + f.FileName,
-			URL:      f.URL,
-			Fragment: fragment,
-		})
 	}
 	return candidates, nil
 }
