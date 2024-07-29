@@ -17,7 +17,7 @@ zs() {
     echo "Usage: zs <query>"
     return 1
   fi
-  curl -s "https://fluffy.ai.m3.com/search?q=$1&num=10&ctx=5&format=json" | zoekt-fuzzy-search | xargs open
+  curl -s "http://localhost:6070/search?q=$1&num=10&ctx=5&format=json" | zoekt-fuzzy-search | xargs open
 }
 ```
 
